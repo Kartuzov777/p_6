@@ -1,0 +1,9 @@
+{% extends 'news/default.html' %}
+{% block content %}
+  <h2>Удаление поста</h2>
+  <p>Ты уверен, что хочешь удалить "{{ post.title }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Да, удалить</button>
+  </form>
+{% endblock %}
