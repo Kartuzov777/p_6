@@ -5,6 +5,11 @@
 
 {% block content %}
     <h2>Новости</h2>
+
+    {% if user.is_authenticated and not user|in_group:"authors" %}
+        <p><a href="{% url 'upgrade' %}">Стать автором</a></p>
+    {% endif %}
+
     {% for post in posts %}
         <div>
             <h3><a href="{% url 'post_detail' post.id %}">{{ post.title|censor }}</a></h3>
