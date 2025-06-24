@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Post
+from .models import Post, Category
 from django_filters.views import FilterView
 from .filters import PostFilter
 from django.urls import reverse_lazy
@@ -8,6 +8,9 @@ from .forms import PostForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+
 
 
 class PostList(ListView):
@@ -97,3 +100,10 @@ def upgrade_me(request):
     if not user.groups.filter(name='authors').exists():
         authors_group.user_set.add(user)
     return redirect('/')
+
+@login_required
+def subscribe(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    user = request.user
+    category.subscribers.add(user)
+    return redirect(request.META.get('HTTP_REFERER', '/'))

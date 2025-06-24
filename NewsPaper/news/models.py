@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
 
 class Author(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -19,6 +22,14 @@ class Author(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
+    subscribers = models.ManyToManyField(
+        to='auth.User',
+        related_name='subscribed_categories',
+        blank=True
+    )
+    def __str__(self):
+        return self.name
+
 
 class Post(models.Model):
     ARTICLE = 'AR'
@@ -67,4 +78,15 @@ class Comment(models.Model):
         self.rating -= 1
         self.save()
 
-###!!!
+@receiver(post_save, sender=Post)
+def notify_subscribers(sender, instance, created, **kwargs):
+    if created and instance.post_type == 'AR':  # только статьи
+        categories = instance.category.all()
+        for category in categories:
+            for user in category.subscribers.all():
+                send_mail(
+                    subject=f"Новая статья в категории {category.name}",
+                    message=f"{instance.title}\n{instance.preview()}\nСсылка: http://127.0.0.1:8000/news/{instance.id}/",
+                    from_email='noreply@newssite.com',
+                    recipient_list=[user.email],
+                )
